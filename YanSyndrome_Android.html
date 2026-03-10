@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>YanSyndrome Android — Cookies Cream</title>
+<style>
+:root{--pink:#ff4488;--deep:#cc0055;--ui-bg:rgba(8,0,12,0.78);--ui-border:rgba(255,68,136,0.45)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{overflow:hidden;background:#000;font-family:'Share Tech Mono',monospace,sans-serif;
+     touch-action:none;-webkit-user-select:none;user-select:none}
+canvas{display:block;width:100vw;height:100vh}
+
+#splash{position:fixed;inset:0;z-index:200;
+    background:radial-gradient(ellipse at 50% 40%,#2a0010 0%,#000 75%);
+    display:flex;flex-direction:column;align-items:center;justify-content:center}
+.petals{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.petal{position:absolute;width:10px;height:16px;
+    background:radial-gradient(ellipse,#ff80b0,#cc0055);
+    border-radius:50% 50% 50% 0/60% 60% 40% 40%;
+    opacity:0;animation:fall linear infinite}
+@keyframes fall{0%{transform:translateY(-20px) rotate(0deg);opacity:.85}
+                100%{transform:translateY(110vh) rotate(400deg);opacity:0}}
+.stitle{font-size:clamp(38px,11vw,68px);color:#fff;letter-spacing:.06em;
+    text-shadow:0 0 28px #ff4488,0 0 55px #cc0055;
+    animation:pulse 3s ease-in-out infinite}
+@keyframes pulse{0%,100%{text-shadow:0 0 28px #ff4488,0 0 55px #cc0055}
+                 50%{text-shadow:0 0 50px #ff88cc,0 0 90px #ff0066}}
+.sjp{color:#ff99bb;font-size:13px;letter-spacing:7px;margin:6px 0 8px;opacity:.75}
+.ssub{color:#772244;font-size:10px;letter-spacing:3px;margin-bottom:48px;text-transform:uppercase}
+#start-btn{padding:15px 60px;font-size:15px;letter-spacing:3px;background:transparent;
+    color:var(--pink);border:1px solid var(--pink);font-family:inherit;cursor:pointer;
+    text-transform:uppercase;transition:background .25s,color .25s}
+#start-btn:active{background:var(--pink);color:#000}
+.seng{margin-top:58px;color:#331122;font-size:9px;letter-spacing:2px}
+
+#ui{position:absolute;inset:0;pointer-events:none;z-index:10}
+.hidden{display:none!important}
+
+#clock{position:absolute;top:16px;right:16px;
+    background:var(--ui-bg);border:1px solid var(--ui-border);padding:7px 13px;text-align:right}
+#clock .ct{font-size:36px;color:#fff;line-height:1;letter-spacing:2px}
+#clock .cd{font-size:9px;color:var(--pink);letter-spacing:2px;margin-top:3px}
+
+#meters{position:absolute;top:16px;left:16px;display:flex;flex-direction:column;gap:7px;width:195px}
+.mw{background:var(--ui-bg);border:1px solid var(--ui-border);padding:6px 9px}
+.ml{font-size:9px;color:var(--pink);letter-spacing:2px;margin-bottom:4px}
+.mb{height:6px;background:#1a001a;overflow:hidden}
+.mf{height:100%;transition:width .5s}
+#rep-fill{background:linear-gradient(90deg,#cc0055,#ff88bb)}
+#san-fill{background:linear-gradient(90deg,#ffaa00,#ffee44)}
+
+#heartbeat{position:absolute;bottom:88px;right:16px;width:175px;height:48px;
+    background:var(--ui-bg);border:1px solid var(--ui-border);overflow:hidden}
+#heartbeat svg{width:100%;height:100%}
+.hbl{stroke-dasharray:580;stroke-dashoffset:580;animation:hbs 1.5s linear infinite}
+@keyframes hbs{to{stroke-dashoffset:0}}
+
+#info{position:absolute;bottom:148px;left:16px;
+    background:var(--ui-bg);border:1px solid var(--ui-border);
+    padding:8px 11px;font-size:10px;color:#bb7799;line-height:1.75;letter-spacing:1px}
+#info span{color:#fff}
+
+#jb{position:absolute;bottom:48px;left:48px;width:108px;height:108px;
+    background:var(--ui-bg);border:1px solid var(--ui-border);
+    border-radius:50%;pointer-events:auto}
+#js{position:absolute;top:50%;left:50%;width:46px;height:46px;border-radius:50%;
+    background:radial-gradient(circle at 35% 35%,#ff88cc,var(--deep));
+    transform:translate(-50%,-50%);
+    box-shadow:0 0 12px var(--pink),0 0 22px rgba(255,68,136,.35)}
+
+#act{position:absolute;bottom:62px;right:48px;width:68px;height:68px;border-radius:50%;
+    background:var(--ui-bg);border:1px solid var(--ui-border);pointer-events:auto;
+    color:var(--pink);font-size:24px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+#act:active{background:rgba(255,68,136,.2)}
+
+#popup{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    background:var(--ui-bg);border:1px solid var(--ui-border);
+    padding:14px 18px;width:min(260px,85vw);display:none;pointer-events:auto;text-align:center}
+.pname{color:var(--pink);font-size:12px;letter-spacing:2px;margin-bottom:8px}
+.ptext{color:#ccc;font-size:11px;line-height:1.65}
+#popup button{margin-top:10px;padding:6px 18px;background:transparent;
+    border:1px solid var(--pink);color:var(--pink);font-family:inherit;font-size:11px;
+    cursor:pointer;letter-spacing:1px;pointer-events:auto}
+
+#wm{position:absolute;bottom:5px;width:100%;text-align:center;
+    color:#330e1e;font-size:9px;letter-spacing:2px}
+</style>
+</head>
+<body>
+
+<div id="splash">
+  <div class="petals" id="petals"></div>
+  <div class="stitle">YanSyndrome</div>
+  <div class="sjp">ヤンデレシンドローム</div>
+  <div class="ssub">Android Preview · Cookies Cream Engine</div>
+  <button id="start-btn">&#9654; ENTER SCHOOL</button>
+  <div class="seng">Build 0.4.2 &middot; Three.js r128 &middot; Touch Optimised</div>
+</div>
+
+<div id="ui" class="hidden">
+  <div id="clock">
+    <div class="ct" id="ct">07:02</div>
+    <div class="cd" id="cd">BEFORE SCHOOL &middot; MON</div>
+  </div>
+  <div id="meters">
+    <div class="mw"><div class="ml">REPUTATION</div><div class="mb"><div class="mf" id="rep-fill" style="width:50%"></div></div></div>
+    <div class="mw"><div class="ml">SANITY</div><div class="mb"><div class="mf" id="san-fill" style="width:90%"></div></div></div>
+  </div>
+  <div id="heartbeat">
+    <svg viewBox="0 0 175 48" preserveAspectRatio="none">
+      <path class="hbl" d="M0,24 L28,24 L36,7 L44,41 L52,24 L88,24 L98,3 L111,45 L124,24 L175,24"
+        fill="none" stroke="#ff4488" stroke-width="2.5"/>
+    </svg>
+  </div>
+  <div id="info">
+    STUDENTS NEARBY: <span id="nb">0</span><br>
+    TARGET: <span id="tgt">&#8212;</span><br>
+    MOOD: <span id="mood">NEUTRAL</span>
+  </div>
+  <div id="jb"><div id="js"></div></div>
+  <div id="act">&#128065;</div>
+  <div id="popup">
+    <div class="pname" id="pname">STUDENT</div>
+    <div class="ptext" id="ptext">...</div>
+    <button id="pclose">[ CLOSE ]</button>
+  </div>
+  <div id="wm">COOKIES CREAM PORT &mdash; STRICTLY DEMONSTRATION</div>
+</div>
+
+<canvas id="c"></canvas>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+// petals
+const pc=document.getElementById('petals');
+for(let i=0;i<28;i++){
+  const p=document.createElement('div');p.className='petal';
+  p.style.cssText='left:'+Math.random()*100+'vw;animation-duration:'+(4+Math.random()*7)+'s;animation-delay:'+Math.random()*9+'s;transform:rotate('+Math.random()*360+'deg)';
+  pc.appendChild(p);
+}
+
+const NPCS=[
+  {name:'HANAKO YAMADA',hair:0xaa3333,cloth:0xeeeeee,skirt:0x2222aa,lines:['Senpai? Are you following me?','I heard rumours about you...']},
+  {name:'MIDORI GURIN', hair:0x227722,cloth:0xeeeeee,skirt:0x2222aa,lines:['Have you seen Senpai?!','Tell me EVERYTHING about him!!']},
+  {name:'SAKI MIYU',    hair:0xcc88cc,cloth:0xeeeeee,skirt:0x2222aa,lines:['Something feels wrong today...','Stay away from my friends.']},
+  {name:'RYUTO IPPONGO',hair:0x223388,cloth:0x222222,skirt:0x222222,lines:['I code, therefore I am.','Interesting specimen...']},
+  {name:'PIPPI OSU',    hair:0xddaa00,cloth:0xeeeeee,skirt:0xaa2222,lines:['Can you help me practice?',"I've never lost a rhythm game!"]},
+];
+const MOODS=['NEUTRAL','FOCUSED','ANXIOUS','ELATED','SUSPICIOUS'];
+
+// three
+const canvas=document.getElementById('c');
+const renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x8bbde0);
+scene.fog=new THREE.FogExp2(0x8bbde0,0.012);
+
+const camera=new THREE.PerspectiveCamera(60,window.innerWidth/window.innerHeight,0.1,200);
+
+function onResize(){
+  renderer.setSize(window.innerWidth,window.innerHeight);
+  camera.aspect=window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+}
+onResize();
+window.addEventListener('resize',onResize);
+
+// lights
+scene.add(new THREE.AmbientLight(0xffeeff,0.55));
+const sun=new THREE.DirectionalLight(0xfff4e0,1.1);
+sun.position.set(30,50,30);sun.castShadow=true;
+sun.shadow.mapSize.set(1024,1024);
+sun.shadow.camera.left=-60;sun.shadow.camera.right=60;
+sun.shadow.camera.top=60;sun.shadow.camera.bottom=-60;
+scene.add(sun);
+const fill=new THREE.DirectionalLight(0xaaccff,0.3);fill.position.set(-20,15,-10);scene.add(fill);
+
+function M(col){return new THREE.MeshLambertMaterial({color:col});}
+function box(x,y,z,w,h,d,col){
+  const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),M(col));
+  m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;scene.add(m);return m;
+}
+
+function buildEnv(){
+  // grass
+  const g=new THREE.Mesh(new THREE.PlaneGeometry(140,140),M(0x6ab055));
+  g.rotation.x=-Math.PI/2;g.receiveShadow=true;scene.add(g);
+  // courtyard
+  const ct=new THREE.Mesh(new THREE.PlaneGeometry(36,36),M(0xb8b4af));
+  ct.rotation.x=-Math.PI/2;ct.position.set(0,0.01,-15);ct.receiveShadow=true;scene.add(ct);
+  // paths
+  box(0,0.01,-1,36,0.02,2.5,0xaaa59e);
+  box(-18,0.01,-15,2.5,0.02,36,0xaaa59e);
+  box(18,0.01,-15,2.5,0.02,36,0xaaa59e);
+  // fountain
+  buildFountain(0,-15);
+  // buildings
+  buildBuilding(0,-46,42,11,8,0xe8e3de);
+  buildBuilding(-22,-46,8,8,8,0xddd8d2);
+  buildBuilding(22,-46,8,8,8,0xddd8d2);
+  // gate
+  gatePost(-6.5,10);gatePost(6.5,10);
+  // trees
+  [[-15,-4],[15,-4],[-15,-19],[15,-19],[-15,-34],[15,-34],[-8,8],[8,8]].forEach(function(p){buildTree(p[0],p[1]);});
+  // benches
+  [[-8,-10],[8,-10],[-8,-22],[8,-22]].forEach(function(p){buildBench(p[0],p[1]);});
+  // lamps
+  [[-16,-1],[16,-1],[-16,-16],[16,-16],[-16,-31],[16,-31]].forEach(function(p){buildLamp(p[0],p[1]);});
+  // walls
+  box(0,1,21,120,2,1.5,0xc8c0b8);
+  box(0,1,-62,120,2,1.5,0xc8c0b8);
+  box(-57,1,-20,1.5,2,84,0xc8c0b8);
+  box(57,1,-20,1.5,2,84,0xc8c0b8);
+}
+
+function buildFountain(x,z){
+  var bm=M(0xd4cfc9);
+  var basin=new THREE.Mesh(new THREE.CylinderGeometry(4.5,5,1.2,32),bm);basin.position.set(x,0.6,z);basin.castShadow=true;scene.add(basin);
+  var stem=new THREE.Mesh(new THREE.CylinderGeometry(0.8,0.9,4.5,12),bm);stem.position.set(x,2.9,z);stem.castShadow=true;scene.add(stem);
+  var bowl=new THREE.Mesh(new THREE.CylinderGeometry(2.8,1,0.8,24),bm);bowl.position.set(x,5.1,z);bowl.castShadow=true;scene.add(bowl);
+  var wm=new THREE.MeshLambertMaterial({color:0x44aaff,transparent:true,opacity:.55});
+  var water=new THREE.Mesh(new THREE.CircleGeometry(4.2,40),wm);water.rotation.x=-Math.PI/2;water.position.set(x,1.12,z);scene.add(water);
+}
+
+function buildBuilding(x,z,w,h,d,col){
+  box(x,h/2,z,w,h,d,col);
+  box(x,h+0.2,z,w+0.6,0.4,d+0.6,0x8a8580);
+  var wm=new THREE.MeshLambertMaterial({color:0x88bbdd,transparent:true,opacity:.7,side:THREE.DoubleSide});
+  var cols=Math.floor(w/4);
+  for(var c=0;c<cols;c++){for(var f=0;f<2;f++){
+    var wn=new THREE.Mesh(new THREE.PlaneGeometry(1.4,1.6),wm);
+    wn.position.set(x-w/2+2+c*4,2.4+f*3.5,z-d/2-0.05);scene.add(wn);
+  }}
+}
+
+function gatePost(x,z){
+  box(x,3,z,1.4,6,1.4,0xc0b8b0);
+  var top=new THREE.Mesh(new THREE.SphereGeometry(0.9,8,6),M(0xcc2222));top.position.set(x,6.9,z);scene.add(top);
+}
+
+function buildTree(x,z){
+  var trunk=new THREE.Mesh(new THREE.CylinderGeometry(0.35,0.7,8,8),M(0x432510));
+  trunk.position.set(x,4,z);trunk.castShadow=true;scene.add(trunk);
+  var lm=M(0xff9dbb);
+  for(var i=0;i<14;i++){
+    var s=new THREE.Mesh(new THREE.SphereGeometry(1.8+Math.random()*1.2,5,4),lm);
+    s.position.set(x+(Math.random()-.5)*5.5,9+Math.random()*4,z+(Math.random()-.5)*5.5);
+    s.castShadow=true;scene.add(s);
+  }
+}
+
+function buildBench(x,z){
+  box(x,0.73,z,2.4,0.14,0.65,0x7a5030);
+  box(x-.85,0.38,z,0.12,0.68,0.65,0x7a5030);
+  box(x+.85,0.38,z,0.12,0.68,0.65,0x7a5030);
+}
+
+function buildLamp(x,z){
+  box(x,2.5,z,0.18,5,0.18,0x444444);
+  var gm=new THREE.MeshLambertMaterial({color:0xffeeaa,emissive:new THREE.Color(0x886622)});
+  var globe=new THREE.Mesh(new THREE.SphereGeometry(0.35,8,6),gm);globe.position.set(x,5.4,z);scene.add(globe);
+}
+
+// player
+var player;
+function buildPlayer(){
+  player=new THREE.Group();player.position.set(0,0,5);scene.add(player);
+  var skin=M(0xffddbb),white=M(0xeeeeee),navy=M(0x1e1e77),dark=M(0x111111),sock=M(0xddcccc),bow=M(0xff3377);
+  var legs=new THREE.Mesh(new THREE.BoxGeometry(0.52,1.05,0.28),sock);legs.position.y=0.6;legs.castShadow=true;player.add(legs);
+  var skirt=new THREE.Mesh(new THREE.CylinderGeometry(0.52,0.95,0.65,12),navy);skirt.position.y=1.5;player.add(skirt);
+  var torso=new THREE.Mesh(new THREE.BoxGeometry(0.72,1.05,0.38),white);torso.position.y=2.08;torso.castShadow=true;player.add(torso);
+  var neck=new THREE.Mesh(new THREE.CylinderGeometry(0.15,0.15,0.22,8),skin);neck.position.y=2.71;player.add(neck);
+  var head=new THREE.Mesh(new THREE.SphereGeometry(0.4,10,8),skin);head.position.y=3.0;head.castShadow=true;player.add(head);
+  var hair=new THREE.Mesh(new THREE.SphereGeometry(0.44,10,8),dark);hair.position.set(0,3.05,0);hair.scale.set(1,.72,1);player.add(hair);
+  var fringe=new THREE.Mesh(new THREE.BoxGeometry(0.82,0.22,0.1),dark);fringe.position.set(0,3.02,-0.4);player.add(fringe);
+  var bw=new THREE.Mesh(new THREE.BoxGeometry(0.32,0.16,0.1),bow);bw.position.set(0.3,3.2,-0.35);player.add(bw);
+  [-0.5,0.5].forEach(function(sx){
+    var arm=new THREE.Mesh(new THREE.CylinderGeometry(0.11,0.11,0.9,6),white);
+    arm.position.set(sx,2.05,0);arm.rotation.z=sx*0.25;player.add(arm);
+  });
+}
+
+var npcObjs=[];
+function buildNPCs(){
+  var spots=[[6,-12],[-6,-12],[10,-19],[-10,-19],[0,-23],[8,-9],[-8,-9]];
+  NPCS.forEach(function(data,i){
+    if(i>=spots.length)return;
+    var x=spots[i][0],z=spots[i][1];
+    var g=buildNPCMesh(data);g.position.set(x,0,z);
+    npcObjs.push({group:g,data:data,sx:x,sz:z,phase:Math.random()*Math.PI*2,spd:.25+Math.random()*.2});
+  });
+}
+
+function buildNPCMesh(d){
+  var g=new THREE.Group();scene.add(g);
+  var skin=M(0xffddbb),cloth=M(d.cloth),skirt=M(d.skirt),hair=M(d.hair),sock=M(0xddcccc);
+  var legs=new THREE.Mesh(new THREE.BoxGeometry(0.48,0.95,0.26),sock);legs.position.y=0.55;g.add(legs);
+  var sk=new THREE.Mesh(new THREE.CylinderGeometry(0.48,0.88,0.6,10),skirt);sk.position.y=1.42;g.add(sk);
+  var torso=new THREE.Mesh(new THREE.BoxGeometry(0.68,0.98,0.36),cloth);torso.position.y=2.0;torso.castShadow=true;g.add(torso);
+  var head=new THREE.Mesh(new THREE.SphereGeometry(0.38,9,7),skin);head.position.y=2.88;head.castShadow=true;g.add(head);
+  var hr=new THREE.Mesh(new THREE.SphereGeometry(0.42,9,7),hair);hr.position.set(0,2.94,0);hr.scale.set(1,.7,1);g.add(hr);
+  [-0.45,0.45].forEach(function(sx){
+    var a=new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.1,0.82,6),cloth);
+    a.position.set(sx,1.98,0);a.rotation.z=sx*0.22;g.add(a);
+  });
+  return g;
+}
+
+// controls
+var inputX=0,inputZ=0,moveActive=false,lastTX=0,lastTY=0,camYaw=Math.PI,camPitch=0.2;
+
+function setupControls(){
+  var jb=document.getElementById('jb'),js=document.getElementById('js');
+  jb.addEventListener('touchstart',function(e){moveActive=true;doJoy(e.targetTouches[0],js,jb);},{passive:true});
+  window.addEventListener('touchmove',function(e){
+    for(var i=0;i<e.changedTouches.length;i++){
+      var t=e.changedTouches[i];
+      if(t.clientX<window.innerWidth*.5){doJoy(t,js,jb);}
+      else{camYaw-=(t.clientX-lastTX)*.005;camPitch+=(t.clientY-lastTY)*.005;camPitch=Math.max(-.4,Math.min(.35,camPitch));}
+      lastTX=t.clientX;lastTY=t.clientY;
+    }
+  },{passive:true});
+  window.addEventListener('touchend',function(){
+    moveActive=false;inputX=0;inputZ=0;js.style.left=js.style.top='50%';
+  });
+  window.addEventListener('touchstart',function(e){
+    var t=e.touches[e.touches.length-1];
+    if(t.clientX>window.innerWidth*.5){lastTX=t.clientX;lastTY=t.clientY;}
+  },{passive:true});
+
+  function doJoy(t,js,jb){
+    var r=jb.getBoundingClientRect();
+    var cx=r.left+r.width/2,cy=r.top+r.height/2;
+    var dx=t.clientX-cx,dy=t.clientY-cy;
+    var d=Math.sqrt(dx*dx+dy*dy),mx=42;
+    if(d>mx){dx*=mx/d;dy*=mx/d;}
+    js.style.left=(50+dx/r.width*100)+'%';js.style.top=(50+dy/r.height*100)+'%';
+    inputX=-dx/mx;inputZ=-dy/mx;
+  }
+
+  document.getElementById('act').addEventListener('touchstart',function(){
+    var cl=null,cd=Infinity;
+    npcObjs.forEach(function(n){
+      var dx=n.group.position.x-player.position.x,dz=n.group.position.z-player.position.z;
+      var d=Math.sqrt(dx*dx+dz*dz);if(d<cd){cd=d;cl=n;}
+    });
+    if(cl&&cd<6){
+      document.getElementById('pname').textContent=cl.data.name;
+      document.getElementById('ptext').textContent='"'+cl.data.lines[Math.floor(Math.random()*cl.data.lines.length)]+'"';
+      document.getElementById('popup').style.display='block';
+      sanity=Math.max(0,sanity-2);updateMeters();
+    }
+  },{passive:true});
+  document.getElementById('pclose').addEventListener('click',function(){document.getElementById('popup').style.display='none';});
+}
+
+var gameMin=7*60+2,reputation=50,sanity=90,moodT=0;
+function tickHUD(){
+  gameMin++;if(gameMin>=1440)gameMin=0;
+  var h=String(Math.floor(gameMin/60)).padStart(2,'0');
+  var m=String(gameMin%60).padStart(2,'0');
+  document.getElementById('ct').textContent=h+':'+m;
+  var lbl='BEFORE SCHOOL';
+  if(gameMin>=480&&gameMin<780)lbl='MORNING CLASS';
+  else if(gameMin>=780&&gameMin<810)lbl='LUNCH BREAK';
+  else if(gameMin>=810&&gameMin<1080)lbl='AFTERNOON CLASS';
+  else if(gameMin>=1080)lbl='AFTER SCHOOL';
+  document.getElementById('cd').textContent=lbl+' \u00b7 MON';
+  sanity=Math.min(100,sanity+.15);
+  moodT++;if(moodT>25){document.getElementById('mood').textContent=MOODS[Math.floor(Math.random()*MOODS.length)];moodT=0;}
+  updateMeters();
+}
+setInterval(tickHUD,3000);
+
+function updateMeters(){
+  document.getElementById('rep-fill').style.width=reputation+'%';
+  document.getElementById('san-fill').style.width=sanity+'%';
+  var sc=sanity>60?'#ffee44':sanity>30?'#ff8800':'#ff2200';
+  document.getElementById('san-fill').style.background='linear-gradient(90deg,'+sc+',#ffeeaa)';
+}
+
+function updatePlayer(){
+  if(!moveActive)return;
+  var angle=Math.atan2(inputX,inputZ)+camYaw;
+  player.position.x+=Math.sin(angle)*.12;
+  player.position.z+=Math.cos(angle)*.12;
+  player.position.x=Math.max(-54,Math.min(54,player.position.x));
+  player.position.z=Math.max(-60,Math.min(19,player.position.z));
+  player.rotation.y=angle;
+  player.position.y=Math.sin(Date.now()*.024)*.03;
+}
+
+function updateCamera(){
+  var dist=6.5;
+  camera.position.set(
+    player.position.x-Math.sin(camYaw)*dist,
+    player.position.y+4.5+camPitch*7,
+    player.position.z-Math.cos(camYaw)*dist
+  );
+  camera.lookAt(player.position.x,player.position.y+2.5,player.position.z);
+}
+
+function updateNPCs(){
+  var t=Date.now()*.001,nb=0,cl=null,cd=Infinity;
+  npcObjs.forEach(function(n){
+    n.group.position.x=n.sx+Math.sin(t*n.spd+n.phase)*2.4;
+    n.group.position.z=n.sz+Math.cos(t*n.spd*.75+n.phase)*2.4;
+    var vx=Math.cos(t*n.spd+n.phase),vz=-Math.sin(t*n.spd*.75+n.phase);
+    n.group.rotation.y=Math.atan2(vx,vz);
+    var dx=n.group.position.x-player.position.x,dz=n.group.position.z-player.position.z;
+    var d=Math.sqrt(dx*dx+dz*dz);
+    if(d<7)nb++;if(d<cd){cd=d;cl=n;}
+  });
+  document.getElementById('nb').textContent=nb;
+  document.getElementById('tgt').textContent=(cl&&cd<9)?cl.data.name:'\u2014';
+}
+
+function animate(){
+  requestAnimationFrame(animate);
+  updatePlayer();updateCamera();updateNPCs();
+  renderer.render(scene,camera);
+}
+
+document.getElementById('start-btn').addEventListener('click',function(){
+  document.getElementById('splash').style.display='none';
+  document.getElementById('ui').classList.remove('hidden');
+  buildEnv();buildPlayer();buildNPCs();setupControls();animate();
+});
+
+})();
+</script>
+</body>
+</html>
